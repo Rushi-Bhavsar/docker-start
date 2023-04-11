@@ -145,4 +145,77 @@ Are you sure you want to continue? [y/N]
 ## Day - 2
 #### DOCKER PORT MAPPING
 * Mapping of container port with the local machine port is called Docker port mapping.
-* 
+* We can do port mapping at run time or while creating container.
+* For run time we can use below command.
+```sh
+docker run -p {local_machine_port_number}:{container_port_number} image_name
+```
+```sh
+docker run -p 5000:8080 rushi1006/simpleweb
+```
+* Ideally we should copy all the files related to project into location called **WORKDIR**.
+```sh
+WORKDIR /usr/app
+```
+* Now all the commands that we execute will be executed from the **WORKDIR** location.
+* If we change the source code of the application then we need to rebuild the docker image to reflect the chanegs.
+* Ideally when we make any changes to the source code all the steps below the **COPY** command is re-executed as we first copy and then do other steps.
+* Check step 3.
+```sh
+rushi@ubuntu:~/Study/docker-start/simpleweb$ docker build -t rushi1006/simpleweb .
+[+] Building 5.4s (9/9) FINISHED                                                                                                      
+ => [internal] load .dockerignore                                                                                                0.0s
+ => => transferring context: 2B                                                                                                  0.0s
+ => [internal] load build definition from Dockerfile                                                                             0.0s
+ => => transferring dockerfile: 266B                                                                                             0.0s
+ => [internal] load metadata for docker.io/library/node:14-alpine                                                                2.1s
+ => [1/4] FROM docker.io/library/node:14-alpine@sha256:434215b487a329c9e867202ff89e704d3a75e554822e07f3e0c0f9e606121b33          0.0s
+ => [internal] load build context                                                                                                0.0s
+ => => transferring context: 300B                                                                                                0.0s
+ => CACHED [2/4] WORKDIR /usr/app                                                                                                0.0s
+ => [3/4] COPY ./ ./                                                                                                             0.0s
+ => [4/4] RUN npm install                                                                                                        3.2s
+ => exporting to image                                                                                                           0.1s
+ => => exporting layers                                                                                                          0.1s
+ => => writing image sha256:1df2ab63e281302ce9429c137ba7dabfccefd9629c801a80a87de1aef05366d2                                     0.0s 
+ => => naming to docker.io/rushi1006/simpleweb
+```
+* If only source code is update and npm packages are not updated then STEP 4 should not be executed.
+* We can achive that by updating the docker image as below.
+```sh
+# BASE IMAGE
+FROM node:14-alpine
+
+WORKDIR /usr/app
+
+# Copy only package.json. So that npm install will not trigger until we update the package.json file.
+COPY ./package.json ./
+
+# Install some dependencies
+RUN npm install
+
+# Now we can copy the source code and all other files. Even if we are not copying the package.json npm install will not trigger.
+# Only step below the COPY command will execute.
+COPY ./ ./
+
+# Startup Command
+CMD ["npm", "start"]
+```
+```sh
+=> [internal] load .dockerignore                                                                                                0.0s
+ => => transferring context: 2B                                                                                                  0.0s
+ => [internal] load build definition from Dockerfile                                                                             0.0s
+ => => transferring dockerfile: 492B                                                                                             0.0s
+ => [internal] load metadata for docker.io/library/node:14-alpine                                                                1.0s
+ => [1/5] FROM docker.io/library/node:14-alpine@sha256:434215b487a329c9e867202ff89e704d3a75e554822e07f3e0c0f9e606121b33          0.0s
+ => [internal] load build context                                                                                                0.0s
+ => => transferring context: 303B                                                                                                0.0s
+ => CACHED [2/5] WORKDIR /usr/app                                                                                                0.0s
+ => CACHED [3/5] COPY ./package.json ./                                                                                          0.0s
+ => CACHED [4/5] RUN npm install                                                                                                 0.0s
+ => [5/5] COPY ./ ./                                                                                                             0.0s
+ => exporting to image                                                                                                           0.0s
+ => => exporting layers                                                                                                          0.0s
+ => => writing image sha256:d59653be9d47c384fc4b530b4ec27a03aac00a108fb09e879542f117f34149b1                                     0.0s
+ => => naming to docker.io/rushi1006/simpleweb
+```

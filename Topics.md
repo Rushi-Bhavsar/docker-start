@@ -9,4 +9,6 @@
 * Proper Docker-Image tagging.
 
 ## Day - 2
-* 
+* Docker Port Mapping.
+* WORKDIR COMMAND.
+* Importance of sequence of commands in Dockerfile.
