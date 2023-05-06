@@ -153,14 +153,30 @@ docker run -p {local_machine_port_number}:{container_port_number} image_name
 ```sh
 docker run -p 5000:8080 rushi1006/simpleweb
 ```
+#### CREATING NODE.JS PROJECT USING DOCKER FILE.
 * Ideally we should copy all the files related to project into location called **WORKDIR**.
 ```sh
 WORKDIR /usr/app
 ```
 * Now all the commands that we execute will be executed from the **WORKDIR** location.
-* If we change the source code of the application then we need to rebuild the docker image to reflect the chanegs.
+* If we change the source code of the application then we need to rebuild the docker image to reflect the changes.
 * Ideally when we make any changes to the source code all the steps below the **COPY** command is re-executed as we first copy and then do other steps.
-* Check step 3.
+* Check step 3 in below snippet.
+```sh
+# BASE IMAGE
+FROM node:14-alpine
+
+WORKDIR /usr/app
+
+# Copy all files into container.
+COPY ./ ./
+
+# Install some dependencies
+RUN npm install
+
+# Startup Command
+CMD ["npm", "start"]
+```
 ```sh
 rushi@ubuntu:~/Study/docker-start/simpleweb$ docker build -t rushi1006/simpleweb .
 [+] Building 5.4s (9/9) FINISHED                                                                                                      
@@ -218,4 +234,113 @@ CMD ["npm", "start"]
  => => exporting layers                                                                                                          0.0s
  => => writing image sha256:d59653be9d47c384fc4b530b4ec27a03aac00a108fb09e879542f117f34149b1                                     0.0s
  => => naming to docker.io/rushi1006/simpleweb
+```
+
+
+## Day-3
+#### DOCKER COMPOSE.
+* Docker Compose is a CLI that helps to reduce the docker CLI arguments.
+* Example:- Docker Compose Automates some of the long-winded arguments we were passing to 'docker run'
+* Docker Compose is used to handle multi-container environment.
+* We need to create a docker-compose.yaml file where we will mention our containers configuration.
+* Example of Docker compose file
+```yml
+version: '3'
+services:
+  redis-server:
+    image: 'redis'
+  node-app:
+    build: .
+    ports:
+      - "4001:8081"
+```
+* Key **Services** is treated as containers.
+* Key **build** search for the Dockerfile in the current location(Where docker-compose.yaml is present)
+* **redis-server** is the name of one container(also know as name of container).
+* Same goes for **node-app**.
+* Ideally there is no direct communication between containers.
+* We have to manually set communication between containers.
+* We can use this services names inside application code to directly communicate between services(containers).
+```js
+const client = redis.createClient(6379, redis-server);
+```
+* In above case request is forward to docker for **'redis-server'** it will be directed to **'redis-server' service**.
+* To start all container we use **docker compose up** command.
+* **docker compose up** is similar to **docker run**
+* **docker compose up --build** is similar to **docker build and docker run**, it will re-build the containers.
+* To run the docker compose command in background we use -d option.
+```sh
+rushi@ubuntu:~/Study/docker-start/visits$ docker compose up -d
+[+] Running 3/3
+ ⠿ Network visits_default           Created                                                                                      0.0s  
+ ⠿ Container visits-node-app-1      Started                                                                                      0.4s
+ ⠿ Container visits-redis-server-1  Started                                                                                      0.5s
+
+```
+* We can also execute single container using docker compose command.
+```sh
+rushi@ubuntu:~/Study/docker-start/visits$ docker compose up -d redis-server
+[+] Running 2/2
+ ⠿ Network visits_default           Created                                                                                      0.0s
+ ⠿ Container visits-redis-server-1  Started                                                                                      0.4s
+```
+* Once the container is created we use **docker ps** command to see the container id and other information.
+* If we want to stop the docker containers using docker compose command we need to down option.
+```
+rushi@ubuntu:~/Study/docker-start/visits$ docker compose down
+[+] Running 3/3
+ ⠿ Container visits-node-app-1      Removed                                                                                      0.8s
+ ⠿ Container visits-redis-server-1  Removed                                                                                      0.4s
+ ⠿ Network visits_default           Removed                                                                                      0.2s
+```
+* Docker compose official command documentation link. [Documentation](https://docs.docker.com/compose/reference/).
+* Docker compose has a restart policy for a specific container.
+* Restart policy
+  1. no: Never restart the container.
+  2. always: Restart the container never it fails.
+  3. on-failure: Restart the container only on failure(error code exit).
+  4. unless-stopped: Restart the container till forcibly stop it(Human intervention).
+```yaml
+version: '3'
+services:
+  redis-server:
+    image: 'redis'
+  node-app:
+    restart: always
+    build: .
+    ports:
+      - "4001:8081"
+```
+* Below logs show that container node-app was restarted on every failure.
+```sh
+visits-node-app-1      | 
+visits-node-app-1      | > start
+visits-node-app-1      | > node index.js
+visits-node-app-1      | 
+visits-node-app-1      | listening on port 8081
+visits-node-app-1 exited with code 0
+visits-node-app-1      | 
+visits-node-app-1      | > start
+visits-node-app-1      | > node index.js
+visits-node-app-1      | 
+visits-node-app-1      | listening on port 8081
+```
+* docker ps commands shows the status of all the containers running on the machine.
+```sh
+rushi@ubuntu:~/Study/docker-start$ docker ps
+CONTAINER ID   IMAGE             COMMAND                  CREATED         STATUS         PORTS                                       NAMES
+8806fc3f2193   visits_node-app   "docker-entrypoint.s…"   6 minutes ago   Up 5 minutes   0.0.0.0:4001->8081/tcp, :::4001->8081/tcp   visits-node-app-1
+2f479634ff15   redis             "docker-entrypoint.s…"   8 minutes ago   Up 6 minutes   6379/tcp                                    visits-redis-server-1
+```
+* If configuration file(.yaml file) is not present in the current folder then command will fail.
+```sh
+rushi@ubuntu:~/Study/docker-start$ docker compose ps
+no configuration file provided: not found
+```
+* docker compose ps command only shows the containers running by a docker-compose.yaml file.
+```sh
+rushi@ubuntu:~/Study/docker-start/visits$ docker compose ps
+NAME                    COMMAND                  SERVICE             STATUS              PORTS
+visits-node-app-1       "docker-entrypoint.s…"   node-app            running             0.0.0.0:4001->8081/tcp, :::4001->8081/tcp
+visits-redis-server-1   "docker-entrypoint.s…"   redis-server        running             6379/tcp
 ```
