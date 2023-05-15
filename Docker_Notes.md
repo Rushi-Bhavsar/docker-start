@@ -141,6 +141,7 @@ Are you sure you want to continue? [y/N]
 ```sh
   docker run -it rushi1006/test_project:10 
 ``` 
+* NOTE:- First we need to build the image from the Dockerfile and then we can use run command(combination of docker create and docker start).
 
 ## Day - 2
 #### DOCKER PORT MAPPING
@@ -344,3 +345,154 @@ NAME                    COMMAND                  SERVICE             STATUS     
 visits-node-app-1       "docker-entrypoint.s…"   node-app            running             0.0.0.0:4001->8081/tcp, :::4001->8081/tcp
 visits-redis-server-1   "docker-entrypoint.s…"   redis-server        running             6379/tcp
 ```
+
+## Day - 4
+### Docker Volume.
+* Storing the the reference of Local files inside container.
+* With the help of this we do not need to re-build the container to reflect the changes.
+```sh
+rushi@ubuntu:~/Study/docker-start/frontend$ docker run -p 3000:3000 -v /app/node_modules -v $(pwd):/app rushi1006/frontend-react-dev
+```
+* The first "-v /app/node_modules" is called as **Bookmark Volume**. We are not passing any local machine file path for reference.
+* The volume which will not have reference to a local machine file are called as **Bookmark Volume**. They are treated as place holder.
+* The second "-v $(pwd):/app" is referencing to the local directory path(pwd) to "/app" inside the container.
+* If we want to build the image with different name other than "Dockerfile" then we need to pass the context(all files and folder need to start the image) and the full path of the Docker_filename.
+```sh
+rushi@ubuntu:~/Study/docker-start/frontend$ docker run -f Dockerfile.dev .
+```
+* We can use docker compose to create volumes.
+```yaml
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+      - .:/app
+```
+* In case we are using volume, then we ideally do not need to perform any copy operation for same directory/files inside the DockerFile.
+
+### Running Test using docker.
+* To run a test first we need to have a container ready.
+* Once the container is ready then only we can run our test.
+* First we create a container using
+```sh
+rushi@ubuntu:~/Study/docker-start/frontend$ docker build -f Dockerfile.dev .
+```
+* Get the container id and then change the run command of the container and attach the interavtive shell.
+```sh
+rushi@ubuntu:~/Study/docker-start/frontend$ docker exec -it b138ad7a9a50 npm run test
+```
+* Execution of test inside the container falls under docker.
+* The plus of of above method is that we get the interactive shell to interact with the test suits.
+* The second approach is that we use docker-compose to create a seperate service(container) and change the run command inside docker-compose file.
+```yaml
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+      - .:/app
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /app/node_modules
+      - .:/app
+    command: ["npm", "run", "test"]
+```
+```sh
+rushi@ubuntu:~/Study/docker-start/frontend$ docker compose up
+.
+.
+.
+
+frontend-tests-1  | Test Suites: 1 passed, 1 total
+frontend-tests-1  | Tests:       2 passed, 2 total
+frontend-tests-1  | Snapshots:   0 total
+frontend-tests-1  | Time:        0.832s
+frontend-tests-1  | Ran all test suites.
+frontend-tests-1  | 
+frontend-tests-1  | Watch Usage
+frontend-tests-1  |  › Press p to filter by a filename regex pattern.
+frontend-tests-1  |  › Press q to quit watch mode.
+frontend-tests-1  |  › Press Enter to trigger a test run.
+frontend-tests-1  |   console.error node_modules/react-dom/cjs/react-dom.development.js:86
+```
+* In case of second approach we do not get the interactive shell if we use **docker attach** command.
+* Watch Section 6 video 76 again.
+* Idealy there is no need to attach the interactive shell while running the test suit.
+* Ideally second approach is more preferrable for PROD env.
+* 
+### Multi-Stage Build Process in Docker
+* The main purpose of the Multi-Stage Build process is to reduce the docker image size.
+* Inside Docker we can multiple FROm statement and the docker image size depends on the last FROM statement.
+* In Multi-Stage we should copy all static and src code to into one stage and in the next stage we should have copy and start command.
+```docker
+FROM node:alpine as stage
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+FROM nginx
+COPY --from=stage /app/build /usr/share/nginx/html
+```
+* To perform multi-stage we need to use **as** keyword follwed by the name **stage**(The name can be anything).
+* We can use multiple **as** to have more stages.
+* We need to use name **stage** in the next step.
+* Image size difference.
+```sh
+rushi@ubuntu:~/Study/docker-start/frontend$ docker images
+REPOSITORY                     TAG       IMAGE ID       CREATED              SIZE                                                     
+rushi1006/single_stage_build   latest    08a05640c5ac   3 seconds ago        339MB
+rushi1006/multi_stage_build    latest    fe395032e52c   About a minute ago   143MB
+```
+* Note:- The **rushi1006/single_stage_build** is without nginx service and **rushi1006/multi_stage_build** is the combination of src code and nginx and other static files.
+
+### Best Example to use Volume.
+* We can use single docker-compose file to create multiple env.
+```yaml
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/node_modules
+      - .:/app
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - /app/node_modules
+      - .:/app
+    command: ["npm", "run", "test"]
+  prod:
+    build: .
+    ports:
+      - "8080:80"
+```
+* In above case we are not creating volume for PROD service so that any changes made to src will not reflect in PROD(service).
+* But in case of **web** which we can treat as **dev** env and attached the volume so that any change done to source code will reflect immediately inside container.
+* This is the best example fo using Volume in Docker.
