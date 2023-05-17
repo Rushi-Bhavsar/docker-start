@@ -9,22 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: npm --version
-      # - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-      # - run: docker build -t rushi1006/react-test -f frontend/Dockerfile frontend/
-      # - run: docker run -e CI=true rushi1006/react-test npm test
+      - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker container npm test
+        - run: docker build -t rushi1006/docker-react-test -f frontend/Dockerfile.dev frontend/
+        - run: docker run -e CI=true rushi1006/docker-react-test npm run test
+        - run: docker rmi -f $(docker images test2 --format "{{.ID}}")
+      - run: docker build -t rushi1006/docker-react -f frontend/Dockerfile frontend/
+      
  
-      # - name: Generate deployment package
-      #   run: zip -r deploy.zip . -x '*.git*'
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
  
-      # - name: Deploy to EB
-      #   uses: einaregilsson/beanstalk-deploy@v18
-      #   with:
-      #     aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-      #     aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-      #     application_name: docker
-      #     environment_name: Docker-env-1
-      #     existing_bucket_name: elasticbeanstalk-ap-south-1-880291223494
-      #     region: ap-south-1
-      #     version_label: ${{ github.sha }}
-      #     deployment_package: deploy.zip
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: docker
+          environment_name: Docker-env-1
+          existing_bucket_name: elasticbeanstalk-ap-south-1-880291223494
+          region: ap-south-1
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
