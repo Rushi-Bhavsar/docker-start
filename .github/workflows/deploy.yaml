@@ -10,10 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build Docker container npm test
-        - run: docker build -t rushi1006/docker-react-test -f frontend/Dockerfile.dev frontend/
-        - run: docker run -e CI=true rushi1006/docker-react-test npm run test
-        - run: docker rmi -f $(docker images test2 --format "{{.ID}}")
+      - run: docker build -t rushi1006/docker-react-test -f frontend/Dockerfile.dev frontend/
+      - run: docker run -e CI=true rushi1006/docker-react-test npm run test
+      - run: docker rmi -f $(docker images test2 --format "{{.ID}}")
       - run: docker build -t rushi1006/docker-react -f frontend/Dockerfile frontend/
       
  
