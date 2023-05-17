@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: apt list | grep npm
+      - run: npm --version
       # - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       # - run: docker build -t rushi1006/react-test -f frontend/Dockerfile frontend/
       # - run: docker run -e CI=true rushi1006/react-test npm test
