@@ -23,14 +23,13 @@
 #       - "8080:80"
   
 
-version: '3.8'
+version: '3'
 
 services:
   frontend-prod:
-    container_name: frontend-prod
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: frontend
+      dockerfile: frontend/Dockerfile
     ports:
       - '80:80'
       
