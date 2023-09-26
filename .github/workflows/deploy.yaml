@@ -24,9 +24,9 @@ jobs:
       - name: Generate deployment package
       # When we perform unzip command on EBS we need all the files under the directory and not the directory.
       # Using below syntax we are changing the current working directory for below **run** command only.
-        # working-directory: ./frontend
+        working-directory: ./frontend
       # Example we directly need all the files and folder present under frontend folder and not the frontend folder and then all the files under it.
-        run: zip -r deploy.zip frontend/*
+        run: zip -r ../deploy.zip .
       # We need zip file in the top level directory i.e /app directory in container and not /app/frontend
  
       - name: Deploy to EB
