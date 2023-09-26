@@ -355,6 +355,7 @@ rushi@ubuntu:~/Study/docker-start/frontend$ docker run -p 3000:3000 -v /app/node
 ```
 * The first "-v /app/node_modules" is called as **Bookmark Volume**. We are not passing any local machine file path for reference.
 * The volume which will not have reference to a local machine file are called as **Bookmark Volume**. They are treated as place holder.
+* **Bookmark volume** are the volume for which we do not map any local machine file.(Inside container ignore those file during mapping).
 * The second "-v $(pwd):/app" is referencing to the local directory path(pwd) to "/app" inside the container.
 * If we want to build the image with different name other than "Dockerfile" then we need to pass the context(all files and folder need to start the image) and the full path of the Docker_filename.
 ```sh
