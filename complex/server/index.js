@@ -19,7 +19,7 @@ const pgClient = new Pool({
 
 pgClient.on("connect", (client) => {
   client
-    .query("CREATE TABLE IF NOT EXISTS values (number, INT)")
+    .query("CREATE TABLE IF NOT EXISTS values (number INT)")
     .catch((err) => console.log(err));
 });
 
@@ -41,7 +41,7 @@ app.get("/values/all", async (req, res) => {
   res.send(values.rows);
 });
 
-app.get("values/current", async (req, res) => {
+app.get("/values/current", async (req, res) => {
   redisClient.hgetall("values", (err, values) => {
     res.send(values);
   });
