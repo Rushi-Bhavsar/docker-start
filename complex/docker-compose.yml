@@ -6,13 +6,8 @@ services:
       - POSTGRES_PASSWORD=postgres_password
   redis:
     image: "redis:latest"
-  nginx:
-    restart: always
-    build:
-      dockerfile: Dockerfile.dev
-      context: ./nginx
     ports:
-      - "3050:80"
+      - "6379:6379"
   api:
     build:
       dockerfile: Dockerfile.dev
@@ -28,6 +23,9 @@ services:
       - PGDATABASE=postgres
       - PGPASSWORD=postgres_password
       - PGPORT=5432
+    depends_on:
+      - redis
+      - postgres
   worker:
     build:
       dockerfile: Dockerfile.dev
@@ -45,3 +43,15 @@ services:
     volumes:
       - /app/node_modules
       - ./client:/app
+    environment:
+      - WDS_SOCKET_PORT=0
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "3050:80"
+    depends_on:
+      - api
+      - client
