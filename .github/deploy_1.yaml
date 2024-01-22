@@ -1,0 +1,42 @@
+# name: Deploy Frontend
+# on:
+#   push:
+#     branches:
+#       - master
+ 
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Latest Repo
+#         uses: actions/checkout@v4
+      
+#       - name: Build
+#         uses: docker/build-push-action@v2
+#         with:
+#           context: frontend
+#           file: frontend/Dockerfile.dev
+#           tags: rushi1006/docker-react:latest
+      
+#       - name: Run Test
+#         run: docker run -e CI=true rushi1006/docker-react npm run test
+       
+#       - name: Generate deployment package
+#       # When we perform unzip command on EBS we need all the files under the directory and not the directory.
+#       # Using below syntax we are changing the current working directory for below **run** command only.
+#         working-directory: ./frontend
+#       # Example we directly need all the files and folder present under frontend folder and not the frontend folder and then all the files under it.
+#         run: zip -r ../deploy.zip .
+#       # We need zip file in the top level directory i.e /app directory in container and not /app/frontend
+ 
+#       - name: Deploy to EB
+#         uses: einaregilsson/beanstalk-deploy@v21
+#         with:
+#           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+#           aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+#           application_name: docker-react
+#           environment_name: Docker-react-env
+#           existing_bucket_name: elasticbeanstalk-ap-south-1-536841427966
+#           region: ap-south-1
+#           version_label: ${{ github.sha }}
+#           deployment_package: deploy.zip
