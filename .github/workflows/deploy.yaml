@@ -21,6 +21,34 @@ jobs:
       - name: Run Test
         run: docker run -e CI=true rushi1006/docker-react-test:latest npm run test
 
+      - name: Build client container.
+        uses: docker/build-push-action@v2
+        with:
+          context: complex/client
+          file: complex/client/Dockerfile
+          tags: rushi1006/complex-client:latest
+
+      - name: Build nginx container
+        uses: docker/build-push-action@v2
+        with:
+          context: complex/nginx
+          file: complex/nginx/Dockerfile
+          tags: rushi1006/complex-nginx:latest
+
+      - name: Build server container
+        uses: docker/build-push-action@v2
+        with:
+          context: complex/server
+          file: complex/server/Dockerfile
+          tags: rushi1006/complex-server:latest
+
+      - name: Build worker container
+        uses: docker/build-push-action@v2
+        with:
+          context: complex/worker
+          file: complex/worker/Dockerfile
+          tags: rushi1006/complex-worker:latest
+
       # - name: Generate deployment package
       #   # When we perform unzip command on EBS we need all the files under the directory and not the directory.
       #   # Using below syntax we are changing the current working directory for below **run** command only.
