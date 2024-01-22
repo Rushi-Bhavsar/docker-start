@@ -19,7 +19,7 @@ jobs:
           tags: rushi1006/docker-react-test:latest
 
       - name: Run Test
-        run: docker run -e CI=true rushi1006/docker-react npm run test
+        run: docker run -e CI=true rushi1006/docker-react-test:latest npm run test
 
       # - name: Generate deployment package
       #   # When we perform unzip command on EBS we need all the files under the directory and not the directory.
