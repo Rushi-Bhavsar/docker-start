@@ -58,3 +58,14 @@ jobs:
           push: true
           file: complex/worker/Dockerfile
           tags: rushi1006/complex-worker:latest
+
+      - name: Beanstalk Deploy
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: complex-docker
+          environment_name: Complex-docker-env
+          existing_bucket_name: elasticbeanstalk-ap-south-1-536841427966
+          region: ap-south-1
+          version_label: ${{ github.sha }}
