@@ -1,0 +1,31 @@
+version: "3"
+services:
+  client:
+    image: "rushi1006/complex-client:latest"
+    mem_limit: 128m
+    hostname: client
+  server:
+    image: "rushi1006/complex-server:latest"
+    mem_limit: 128m
+    hostname: api
+    environment:
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
+      - PGUSER=$PGUSER
+      - PGHOST=$PGHOST
+      - PGDATABASE=$PGDATABASE
+      - PGPASSWORD=$PGPASSWORD
+      - PGPORT=$PGPORT
+  worker:
+    image: "rushi1006/complex-worker:latest"
+    mem_limit: 128m
+    hostname: worker
+    environment:
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
+  nginx:
+    image: "rushi1006/complex-nginx:latest"
+    mem_limit: 128m
+    hostname: nginx
+    ports:
+      - "80:80"
