@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      components: web
+  template:
+    metadata:
+      labels:
+        components: web
+    spec:
+      containers:
+        - name: client
+          image: stephengrider/multi-client:latest
+          ports:
+            - containerPort: 3000
