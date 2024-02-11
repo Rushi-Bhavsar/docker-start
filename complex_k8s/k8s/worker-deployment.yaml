@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      components: worker
+  template:
+    metadata:
+      labels:
+        components: worker
+    spec:
+      containers:
+        - name: worker
+          image: rushi1006/complex-worker:v1
+          env:
+            - name: REDIS_HOST
+              value: redis-cluster-ip-service
+            - name: REDIS_PORT
+              value: "6379"
+            
